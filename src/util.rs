@@ -13,6 +13,29 @@ pub enum RotDirection {
     CounterClockwise,
 }
 
+impl Orientation {
+    pub fn rotate(&self, direction: RotDirection) -> Self {
+        match direction {
+            RotDirection::Clockwise => {
+                match self {
+                    Orientation::North => Orientation::East,
+                    Orientation::East => Orientation::South,
+                    Orientation::South => Orientation::West,
+                    Orientation::West => Orientation::North,
+                }
+            },
+            RotDirection::CounterClockwise => {
+                match self {
+                    Orientation::North => Orientation::West,
+                    Orientation::East => Orientation::North,
+                    Orientation::South => Orientation::East,
+                    Orientation::West => Orientation::South,
+                }
+            },
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct UPos2d {
     pub x: usize,

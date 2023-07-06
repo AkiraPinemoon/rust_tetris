@@ -98,10 +98,16 @@ impl GameState {
         match self.current {
             None => (),
             Some((mut tetro, pos)) => {
-                //todo: check if allowed using srs
-
+                let offsets = tetromino::get_shape_offset_tests(tetro.shape, tetro.orientation, direction);
                 tetro.rotate(direction);
-                self.current = Some((tetro, pos));
+
+                for offset in offsets.into_iter() {
+                    let test = self.fit_test(tetro, Pos2d { x: pos.x + offset.x, y: pos.y + offset.y });
+                    if test {
+                        self.current = Some((tetro, Pos2d { x: pos.x + offset.x, y: pos.y + offset.y }));
+                        return;
+                    }
+                }
             },
         }
     }

@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use crate::util::{self, Pos2d};
+use crate::util::{self, Pos2d, RotDirection};
 
 #[derive(Clone, Copy)]
 pub enum Shape { O, I, L, J, S, Z, T }
@@ -32,24 +32,7 @@ impl Tetromino {
     }
 
     pub fn rotate(&mut self, direction: util::RotDirection) {
-        match direction {
-            util::RotDirection::Clockwise => {
-                self.orientation = match self.orientation {
-                    util::Orientation::North => util::Orientation::East,
-                    util::Orientation::East => util::Orientation::South,
-                    util::Orientation::South => util::Orientation::West,
-                    util::Orientation::West => util::Orientation::North,
-                }
-            },
-            util::RotDirection::CounterClockwise => {
-                self.orientation = match self.orientation {
-                    util::Orientation::North => util::Orientation::West,
-                    util::Orientation::East => util::Orientation::North,
-                    util::Orientation::South => util::Orientation::East,
-                    util::Orientation::West => util::Orientation::South,
-                }
-            },
-        }
+        self.orientation = self.orientation.rotate(direction);
     }
 
     pub fn get_tiles(&self) -> [util::UPos2d; 4] {
@@ -74,7 +57,6 @@ impl Display for Tetromino {
     }
 }
 
-// todo: rotation reversed
 fn get_tiles(shape: Shape, orientation: util::Orientation) -> [util::UPos2d; 4] {
     use Shape::*;
     use util::Orientation::*;
@@ -176,72 +158,159 @@ fn get_shape_color(shape: Shape) -> Color {
     }
 }
 
-fn get_shape_offset_tests(shape: Shape, orientation: util::Orientation) -> [Pos2d; 5] {
-    match shape {
-        Shape::J | Shape::L | Shape::S | Shape::T | Shape::Z => {
-            match orientation {
-                util::Orientation::North | util::Orientation::South => {[
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 0, y: 0 },
-                ]},
-                util::Orientation::East => {[
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 1, y: 0 },
-                    Pos2d{ x: 1, y: 1 },
-                    Pos2d{ x: 0, y: -2 },
-                    Pos2d{ x: 1, y: -2 },
-                ]},
-                util::Orientation::West => {[
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: -1, y: 0 },
-                    Pos2d{ x: -1, y: 1 },
-                    Pos2d{ x: 0, y: -2 },
-                    Pos2d{ x: -1, y: -2 },
-                ]},
+pub fn get_shape_offset_tests(shape: Shape, orientation: util::Orientation, direction: util::RotDirection) -> [Pos2d; 5] {
+    match direction {
+        RotDirection::Clockwise => {
+            match shape {
+                Shape::J | Shape::L | Shape::S | Shape::T | Shape::Z => {
+                    match orientation {
+                        util::Orientation::North => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: -1, y: -1 },
+                            Pos2d{ x: 0, y: 2 },
+                            Pos2d{ x: -1, y: 2 },
+                        ]},
+                        util::Orientation::East => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: 1, y: 1 },
+                            Pos2d{ x: 0, y: -2 },
+                            Pos2d{ x: 1, y: -2 },
+                        ]},
+                        util::Orientation::South => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: 1, y: -1 },
+                            Pos2d{ x: 0, y: 2 },
+                            Pos2d{ x: 1, y: 2 },
+                        ]},
+                        util::Orientation::West => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: -1, y: 1 },
+                            Pos2d{ x: 0, y: -2 },
+                            Pos2d{ x: -1, y: -2 },
+                        ]},
+                    }
+                },
+                Shape::I => {
+                    match orientation {
+                        util::Orientation::North => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -2, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: -2, y: 1 },
+                            Pos2d{ x: 1, y: -2 },
+                        ]},
+                        util::Orientation::East => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: 2, y: 0 },
+                            Pos2d{ x: -1, y: -2 },
+                            Pos2d{ x: 2, y: 1 },
+                        ]},
+                        util::Orientation::South => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 2, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: 2, y: -1 },
+                            Pos2d{ x: -1, y: 2 },
+                        ]},
+                        util::Orientation::West => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: -2, y: 0 },
+                            Pos2d{ x: 1, y: 2 },
+                            Pos2d{ x: -1, y: 1 },
+                        ]},
+                    }
+                },
+                Shape::O => {
+                    match orientation {
+                        util::Orientation::North => {[Pos2d{ x: 0, y: 0 }; 5]},
+                        util::Orientation::East => {[Pos2d{ x: 0, y: 0 }; 5]},
+                        util::Orientation::South => {[Pos2d{ x: 0, y: 0 }; 5]},
+                        util::Orientation::West => {[Pos2d{ x: 0, y: 0 }; 5]},
+                    }
+                },
             }
         },
-        Shape::I => {
-            match orientation {
-                util::Orientation::North => {[
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: -1, y: 0 },
-                    Pos2d{ x: 2, y: 0 },
-                    Pos2d{ x: -1, y: 0 },
-                    Pos2d{ x: 2, y: 0 },
-                ]},
-                util::Orientation::East => {[
-                    Pos2d{ x: -1, y: 0 },
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 0, y: 0 },
-                    Pos2d{ x: 0, y: -1 },
-                    Pos2d{ x: 0, y: 2 },
-                ]},
-                util::Orientation::South => {[
-                    Pos2d{ x: -1, y: -1 },
-                    Pos2d{ x: 1, y: -1 },
-                    Pos2d{ x: -2, y: -1 },
-                    Pos2d{ x: 1, y: 0 },
-                    Pos2d{ x: -2, y: 0 },
-                ]},
-                util::Orientation::West => {[
-                    Pos2d{ x: 0, y: -1 },
-                    Pos2d{ x: 0, y: -1 },
-                    Pos2d{ x: 0, y: 1 },
-                    Pos2d{ x: 0, y: 1 },
-                    Pos2d{ x: 0, y: -2 },
-                ]},
+        RotDirection::CounterClockwise => {
+            match shape {
+                Shape::J | Shape::L | Shape::S | Shape::T | Shape::Z => {
+                    match orientation {
+                        util::Orientation::North => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: 1, y: -1 },
+                            Pos2d{ x: 0, y: 2 },
+                            Pos2d{ x: 1, y: 2 },
+                        ]},
+                        util::Orientation::East => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: 1, y: 1 },
+                            Pos2d{ x: 0, y: -2 },
+                            Pos2d{ x: 1, y: -2 },
+                        ]},
+                        util::Orientation::South => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: -1, y: -1 },
+                            Pos2d{ x: 0, y: 2 },
+                            Pos2d{ x: -1, y: 2 },
+                        ]},
+                        util::Orientation::West => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: -1, y: 1 },
+                            Pos2d{ x: 0, y: -2 },
+                            Pos2d{ x: -1, y: -2 },
+                        ]},
+                    }
+                },
+                Shape::I => {
+                    match orientation {
+                        util::Orientation::North => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: 2, y: 0 },
+                            Pos2d{ x: -1, y: -2 },
+                            Pos2d{ x: 2, y: 1 },
+                        ]},
+                        util::Orientation::East => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 2, y: 0 },
+                            Pos2d{ x: -1, y: 0 },
+                            Pos2d{ x: 2, y: -1 },
+                            Pos2d{ x: -1, y: 2 },
+                        ]},
+                        util::Orientation::South => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: -2, y: 0 },
+                            Pos2d{ x: 1, y: 2 },
+                            Pos2d{ x: -2, y: 1 },
+                        ]},
+                        util::Orientation::West => {[
+                            Pos2d{ x: 0, y: 0 },
+                            Pos2d{ x: -2, y: 0 },
+                            Pos2d{ x: 1, y: 0 },
+                            Pos2d{ x: -2, y: 1 },
+                            Pos2d{ x: 1, y: -2 },
+                        ]},
+                    }
+                },
+                Shape::O => {
+                    match orientation {
+                        util::Orientation::North => {[Pos2d{ x: 0, y: 0 }; 5]},
+                        util::Orientation::East => {[Pos2d{ x: 0, y: 0 }; 5]},
+                        util::Orientation::South => {[Pos2d{ x: 0, y: 0 }; 5]},
+                        util::Orientation::West => {[Pos2d{ x: 0, y: 0 }; 5]},
+                    }
+                },
             }
         },
-        Shape::O => {
-            match orientation {
-                util::Orientation::North => {[Pos2d{ x: 0, y: 0 }; 5]},
-                util::Orientation::East => {[Pos2d{ x: 0, y: 1 }; 5]},
-                util::Orientation::South => {[Pos2d{ x: -1, y: 1 }; 5]},
-                util::Orientation::West => {[Pos2d{ x: -1, y: 0 }; 5]},
-            }
-        }
     }
 }
