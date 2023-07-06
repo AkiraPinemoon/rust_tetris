@@ -39,7 +39,7 @@ impl Tetromino {
         }
     }
 
-    pub fn get_tiles(&self) -> [(usize, usize); 4] {
+    pub fn get_tiles(&self) -> [util::UPos2d; 4] {
         get_tiles(self.shape, self.orientation)
     }
 }
@@ -48,7 +48,7 @@ impl Display for Tetromino {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut shape = [[false; 4]; 4];
         for tile in self.get_tiles().iter() {
-            shape[tile.0][tile.1] = true;
+            shape[tile.y][tile.x] = true;
         }
 
         let out = shape.into_iter().map(|line| {
@@ -61,91 +61,92 @@ impl Display for Tetromino {
     }
 }
 
-fn get_tiles(shape: Shape, orientation: util::Orientation) -> [(usize, usize); 4] {
+// todo: rotation reversed
+fn get_tiles(shape: Shape, orientation: util::Orientation) -> [util::UPos2d; 4] {
     use Shape::*;
     use util::Orientation::*;
 
     match (shape, orientation) {
         (O, _) => {
-            [(0, 1), (0, 2), (1, 1), (1, 2)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 0, y: 2 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
 
         (I, North) => {
-            [(1, 0), (1, 1), (1, 2), (1, 3)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 1, y: 3 }]
         },
         (I, East) => {
-            [(0, 2), (1, 2), (2, 2), (3, 2)]
+            [util::UPos2d{ x: 0, y: 2 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 2 }, util::UPos2d{ x: 3, y: 2 }]
         },
         (I, South) => {
-            [(2, 0), (2, 1), (2, 2), (2, 3)]
+            [util::UPos2d{ x: 2, y: 0 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 2 }, util::UPos2d{ x: 2, y: 3 }]
         },
         (I, West) => {
-            [(0, 1), (1, 1), (2, 1), (3, 1)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 3, y: 1 }]
         },
 
         (L, North) => {
-            [(1, 0), (1, 1), (1, 2), (0, 2)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 0, y: 2 }]
         },
         (L, East) => {
-            [(0, 1), (1, 1), (2, 1), (2, 2)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 2 }]
         },
         (L, South) => {
-            [(1, 0), (1, 1), (1, 2), (2, 0)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 0 }]
         },
         (L, West) => {
-            [(0, 1), (1, 1), (2, 1), (0, 0)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 0, y: 0 }]
         },
 
         (J, North) => {
-            [(1, 0), (1, 1), (1, 2), (0, 0)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 0, y: 0 }]
         },
         (J, East) => {
-            [(0, 1), (1, 1), (2, 1), (0, 2)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 0, y: 2 }]
         },
         (J, South) => {
-            [(1, 0), (1, 1), (1, 2), (2, 2)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 2 }]
         },
         (J, West) => {
-            [(0, 1), (1, 1), (2, 1), (2, 0)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 0 }]
         },
 
         (S, North) => {
-            [(1, 0), (1, 1), (0, 1), (0, 2)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 0, y: 2 }]
         },
         (S, East) => {
-            [(0, 1), (1, 1), (1, 2), (2, 2)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 2 }]
         },
         (S, South) => {
-            [(2, 0), (2, 1), (1, 1), (1, 2)]
+            [util::UPos2d{ x: 2, y: 0 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
         (S, West) => {
-            [(0, 0), (1, 0), (1, 1), (2, 1)]
+            [util::UPos2d{ x: 0, y: 0 }, util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }]
         },
 
         (Z, North) => {
-            [(0, 0), (0, 1), (1, 1), (1, 2)]
+            [util::UPos2d{ x: 0, y: 0 }, util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
         (Z, East) => {
-            [(0, 2), (1, 2), (1, 1), (2, 1)]
+            [util::UPos2d{ x: 0, y: 2 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }]
         },
         (Z, South) => {
-            [(1, 0), (1, 1), (2, 1), (2, 2)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 2 }]
         },
         (Z, West) => {
-            [(0, 1), (1, 1), (1, 0), (2, 0)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 2, y: 0 }]
         },
 
         (T, North) => {
-            [(1, 0), (1, 1), (1, 2), (0, 1)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 0, y: 1 }]
         },
         (T, East) => {
-            [(0, 1), (1, 1), (2, 1), (1, 2)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
         (T, South) => {
-            [(1, 0), (1, 1), (1, 2), (2, 1)]
+            [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 1 }]
         },
         (T, West) => {
-            [(0, 1), (1, 1), (2, 1), (1, 0)]
+            [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 1, y: 0 }]
         },
     }
 }

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 
@@ -43,8 +43,8 @@ impl GameState {
             Err(_) => {
                 // put current in grid
                 if let Some((tetro, pos)) = self.current {
-                    for (x, y) in tetro.get_tiles() {
-                        self.grid[y + pos.y][x + pos.x] = true;
+                    for tile in tetro.get_tiles() {
+                        self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] = true;
                     }
                 }
 
@@ -54,6 +54,8 @@ impl GameState {
             },
         }
 
+        self.remove_lines();
+
         if self.current.is_none() { self.spawn() }
     }
 
@@ -62,9 +64,9 @@ impl GameState {
             None => Ok(()),
             Some((tetro, mut pos)) => {
                 let mut res = true;
-                for (x, y) in tetro.get_tiles() {
-                    if y + pos.y == 19 { return Err(()) }
-                    if self.grid[y + pos.y + 1][x + pos.x] { res = false }
+                for tile in tetro.get_tiles() {
+                    if tile.y as isize + pos.y == 19 { return Err(()) }
+                    if self.grid[(tile.y as isize + pos.y + 1) as usize][(tile.x as isize + pos.x) as usize] { res = false }
                 }
 
                 if res {
@@ -81,9 +83,9 @@ impl GameState {
         match self.current {
             None => (),
             Some((tetro, pos)) => {
-                for (x, y) in tetro.get_tiles() {
-                    if y + pos.x == 9 { return }
-                    if self.grid[y + pos.y][x + pos.x + 1] { return }
+                for tile in tetro.get_tiles() {
+                    if tile.x as isize + pos.x == 9 { return }
+                    if self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x + 1) as usize] { return }
                 }
 
                 self.current = Some((tetro, Pos2d{ x: pos.x + 1, y: pos.y }));
@@ -96,12 +98,37 @@ impl GameState {
             None => (),
             Some((tetro, pos)) => {
                 let mut res = true;
-                for (x, y) in tetro.get_tiles() {
-                    if y + pos.x == 0 { return }
-                    if self.grid[y + pos.y][x + pos.x - 1] { res = false }
+                for tile in tetro.get_tiles() {
+                    if tile.x as isize + pos.x == 0 { return }
+                    if self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x - 1) as usize] { res = false }
                 }
 
                 if res { self.current = Some((tetro, Pos2d{ x: pos.x - 1, y: pos.y })) }
+            }
+        }
+    }
+
+    pub fn rotate(&mut self, direction: util::RotDirection) {
+        match self.current {
+            None => (),
+            Some((mut tetro, pos)) => {
+                //todo: check if allowed using srs
+
+                tetro.rotate(direction);
+                self.current = Some((tetro, pos));
+            },
+        }
+    }
+
+    fn remove_lines(&mut self) {
+        for (y, &line) in self.grid.clone().iter().enumerate() {
+            let full = line.into_iter().filter(|&cell| { !cell }).collect::<Vec<bool>>().len() == 0;
+
+            if full {
+                for ymov in (1..y).rev() {
+                    self.grid[ymov + 1] = self.grid[ymov];
+                }
+                self.grid[0] = [false; 10];
             }
         }
     }
@@ -112,8 +139,8 @@ impl Display for GameState {
         let mut dsp_grid = self.grid.clone();
 
         if let Some((tetro, pos)) = self.current {
-            for (x, y) in tetro.get_tiles() {
-                dsp_grid[y + pos.y][x + pos.x] = true;
+            for tile in tetro.get_tiles() {
+                dsp_grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] = true;
             }
         }
 

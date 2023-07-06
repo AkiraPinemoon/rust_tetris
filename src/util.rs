@@ -14,7 +14,13 @@ pub enum RotDirection {
 }
 
 #[derive(Clone, Copy)]
-pub struct Pos2d {
+pub struct UPos2d {
     pub x: usize,
     pub y: usize,
+}
+
+#[derive(Clone, Copy)]
+pub struct Pos2d {
+    pub x: isize,
+    pub y: isize,
 }
