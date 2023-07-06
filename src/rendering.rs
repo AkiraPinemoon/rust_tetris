@@ -1,46 +1,8 @@
-use crate::{gamestate, tetromino::Color};
+use crate::tetromino::Color;
 
 pub trait Renderer {
     fn draw(&mut self, gamestate: &mut crate::gamestate::GameState);
-}
-
-pub struct ConsoleRenderer {}
-
-impl Renderer for ConsoleRenderer {
-    fn draw(&mut self, gamestate: &mut crate::gamestate::GameState) {
-        let mut dsp_grid = gamestate.grid.clone();
-
-        if let Some((tetro, pos)) = gamestate.current {
-            for tile in tetro.get_tiles() {
-                dsp_grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] =
-                    Some(tetro.color);
-            }
-        }
-
-        let out = dsp_grid
-            .into_iter()
-            .map(|line| {
-                line.into_iter()
-                    .map(|cell| match cell {
-                        None => ". ".to_string(),
-                        Some(col) => match col {
-                            Color::Teal => "[]".to_string(),
-                            Color::Blue => "██".to_string(),
-                            Color::Orange => "▒▒".to_string(),
-                            Color::Yellow => "()".to_string(),
-                            Color::Green => "{}".to_string(),
-                            Color::Purple => "▓▓".to_string(),
-                            Color::Red => "░░".to_string(),
-                        },
-                    })
-                    .collect::<String>()
-            })
-            .collect::<Vec<String>>()
-            .join("▌\n▐");
-
-        print!("{esc}[1;1H", esc = 27 as char);
-        println!("▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌\n▐       Tetris       ▌\n▐▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌\n▐{}▌\n▝▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▘", out);
-    }
+    fn get_events(&mut self) -> Vec<crate::util::Event>;
 }
 
 pub struct SdlRenderer {
@@ -54,8 +16,10 @@ impl SdlRenderer {
         let video_subsystem = sdl_context.video().unwrap();
 
         let window = video_subsystem
-            .window("rust-sdl2 demo", 800, 600)
+            .window("rust Tetris", 300, 600)
             .position_centered()
+            .allow_highdpi()
+            .resizable()
             .build()
             .unwrap();
 
@@ -64,14 +28,24 @@ impl SdlRenderer {
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.present();
-        let mut event_pump = sdl_context.event_pump().unwrap();
+        let event_pump = sdl_context.event_pump().unwrap();
 
         Self { event_pump, canvas }
     }
 
     fn draw_field(&mut self, gamestate: &mut crate::gamestate::GameState) {
-        for (i, row) in gamestate.grid.iter().enumerate() {
-            for (j, col) in row.iter().enumerate() {
+        let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
+
+        let color = sdl2::pixels::Color::RGB(10, 10, 10);
+        self.canvas.set_draw_color(color);
+        self.canvas
+            .fill_rect(sdl2::rect::Rect::new(0, 0, (10.0 * tilesize) as u32, (20.0 * tilesize) as u32))
+            .unwrap();
+
+        for (i, row) in gamestate.grid.into_iter().rev().take(20).rev().enumerate() {
+            for (j, col) in row.into_iter().enumerate() {
+                if col.is_none() { continue; }
+
                 let (r, g, b) = match col {
                     Some(Color::Red) => (255, 0, 0),
                     Some(Color::Blue) => (0, 0, 255),
@@ -83,10 +57,20 @@ impl SdlRenderer {
                     None => (0, 0, 0),
                 };
 
+                let (x, y) = (
+                    (j as f32 * tilesize) as i32,
+                    (i as f32 * tilesize) as i32,
+                );
+
+                let (w, h) = (
+                    (((j + 1) as f32 * tilesize) as i32 - x) as u32,
+                    (((i + 1) as f32 * tilesize) as i32 - y) as u32,
+                );
+
                 let color = sdl2::pixels::Color::RGB(r, g, b);
                 self.canvas.set_draw_color(color);
                 self.canvas
-                    .fill_rect(sdl2::rect::Rect::new(j as i32 * 10, i as i32 * 10, 10, 10))
+                    .fill_rect(sdl2::rect::Rect::new(x, y, w, h))
                     .unwrap();
             }
         }
@@ -95,6 +79,8 @@ impl SdlRenderer {
     fn draw_tetro(&mut self, gamestate: &mut crate::gamestate::GameState) {
         if gamestate.current.is_none() { return; }
         let (tetro, pos) = gamestate.current.unwrap();
+
+        let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
 
         for tile in tetro.get_tiles().into_iter() {
             let (r, g, b) = match tetro.color {
@@ -107,10 +93,20 @@ impl SdlRenderer {
                 Color::Yellow => (255, 255, 0),
             };
 
+            let (x, y) = (
+                ((pos.x + tile.x as isize) as f32 * tilesize) as i32,
+                ((pos.y + tile.y as isize - 2) as f32 * tilesize) as i32,
+            );
+
+            let (w, h) = (
+                (((pos.x + tile.x as isize + 1) as f32 * tilesize) as i32 - x) as u32,
+                (((pos.y + tile.y as isize - 1) as f32 * tilesize) as i32 - y) as u32,
+            );
+
             let color = sdl2::pixels::Color::RGB(r, g, b);
             self.canvas.set_draw_color(color);
             self.canvas
-                .fill_rect(sdl2::rect::Rect::new((pos.x + tile.x as isize) as i32 * 10, (pos.y + tile.y as isize) as i32 * 10, 10, 10))
+                .fill_rect(sdl2::rect::Rect::new(x, y, w, h))
                 .unwrap();
         }
     }
@@ -124,18 +120,30 @@ impl Renderer for SdlRenderer {
         self.draw_field(gamestate);
         self.draw_tetro(gamestate);
 
+        self.canvas.present();
+    }
+
+    fn get_events(&mut self) -> Vec<crate::util::Event> {
+        let mut events = Vec::new();
+
         for event in self.event_pump.poll_iter() {
             match event {
                 sdl2::event::Event::Quit { .. }
                 | sdl2::event::Event::KeyDown {
                     keycode: Some(sdl2::keyboard::Keycode::Escape),
                     ..
-                } => {
-                    gamestate.state = crate::gamestate::State::Lost;
-                }
+                } => { events.push(crate::util::Event::Quit) },
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::A), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::A)) },
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::S), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::S)) },
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::D), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::D)) },
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Space), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::Space)) },
+                sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::A), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::A)) },
+                sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::S), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::S)) },
+                sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::D), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::D)) },
+                sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::Space), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::Space)) },
                 _ => {}
             }
-        }
-        self.canvas.present();
+        };
+        events
     }
 }

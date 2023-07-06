@@ -47,3 +47,15 @@ pub struct Pos2d {
     pub x: isize,
     pub y: isize,
 }
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Event {
+    KeyDown(Keycode),
+    KeyUp(Keycode),
+    Quit,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Keycode {
+    A, S, D, Space,
+}
