@@ -3,6 +3,7 @@ mod util;
 mod tetromino;
 mod gamestate;
 mod io;
+mod rendering;
 
 fn main() {
     let fps = 15;
@@ -15,12 +16,12 @@ fn main() {
     let mut rothold = false;
 
     let mut frame: usize = 0;
+
+    let renderer: Box<dyn rendering::Renderer> = Box::new(rendering::ConsoleRenderer{});
     while g.state == gamestate::State::Running {
         if frame % 5 == 0 { g.step(); }
 
-        print!("{esc}[1;1H", esc = 27 as char);
-        print!("{}", g);
-        println!("{esc}[1;1H", esc = 27 as char);
+        renderer.draw(&g);
 
         let keys = i.get_keys();
         if keys.contains(&device_query::Keycode::D) { g.move_right() }
