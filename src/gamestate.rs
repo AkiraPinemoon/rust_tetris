@@ -7,10 +7,11 @@ use crate::{tetromino::{self, Shape, Color, Tetromino}, util::{self, Pos2d}};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Running,
+    Lost,
 }
 
 pub struct GameState {
-    pub grid: [[Option<tetromino::Color>; 10]; 20],
+    pub grid: [[Option<tetromino::Color>; 10]; 22],
     pub current: Option<(tetromino::Tetromino, util::Pos2d)>,
     pub state: State,
     pub next: Vec<tetromino::Shape>,
@@ -19,7 +20,7 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> Self {
         Self {
-            grid: [[None; 10]; 20],
+            grid: [[None; 10]; 22],
             current: None,
             state: State::Running,
             next: Vec::new(),
@@ -114,7 +115,15 @@ impl GameState {
 
     fn remove_lines(&mut self) {
         for (y, &line) in self.grid.clone().iter().enumerate() {
-            let full = line.into_iter().filter(|&cell| { cell.is_none() }).collect::<Vec<Option<Color>>>().len() == 0;
+            let blocks_in_line = line.into_iter().filter(|&cell| { cell.is_some() }).collect::<Vec<Option<Color>>>().len();
+            let full = blocks_in_line == 10;
+            
+            if blocks_in_line != 0 {
+                if y == 0 || y == 1 {
+                    self.state = State::Lost;
+                    return;
+                }
+            }
 
             if full {
                 for ymov in (1..y).rev() {
@@ -129,7 +138,7 @@ impl GameState {
         for tile in tetro.get_tiles() {
             if (tile.x as isize + pos.x) > 9 { return false }
             if (tile.x as isize + pos.x) < 0 { return false }
-            if (tile.y as isize + pos.y) > 19 { return false }
+            if (tile.y as isize + pos.y) > 21 { return false }
             if (tile.y as isize + pos.y) < 0 { return false }
             if self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize].is_some() { return false }
         }

@@ -19,7 +19,7 @@ impl Renderer for ConsoleRenderer {
             }
         }
 
-        let out = dsp_grid.into_iter().map(|line| {
+        let out = dsp_grid.into_iter().rev().take(20).rev().map(|line| {
             line.into_iter().map(|cell| {
                 match cell {
                     None => "  ".to_string(),

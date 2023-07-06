@@ -37,4 +37,6 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(millispf));
         frame += 1;
     }
+
+    println!("lost :(");
 }
