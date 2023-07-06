@@ -1,13 +1,25 @@
 use std::fmt::Display;
-use crate::util;
+use crate::util::{self, Pos2d};
 
 #[derive(Clone, Copy)]
 pub enum Shape { O, I, L, J, S, Z, T }
 
 #[derive(Clone, Copy)]
+pub enum Color {
+    Teal,
+    Blue,
+    Orange,
+    Yellow,
+    Green,
+    Purple,
+    Red,
+}
+
+#[derive(Clone, Copy)]
 pub struct Tetromino {
     pub shape: Shape,
     pub orientation: util::Orientation,
+    pub color: Color,
 }
 
 impl Tetromino {
@@ -15,6 +27,7 @@ impl Tetromino {
         Self {
             shape,
             orientation,
+            color: get_shape_color(shape),
         }
     }
 
@@ -71,82 +84,164 @@ fn get_tiles(shape: Shape, orientation: util::Orientation) -> [util::UPos2d; 4] 
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 0, y: 2 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
 
-        (I, North) => {
+        (I, West) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 1, y: 3 }]
         },
-        (I, East) => {
+        (I, South) => {
             [util::UPos2d{ x: 0, y: 2 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 2 }, util::UPos2d{ x: 3, y: 2 }]
         },
-        (I, South) => {
+        (I, East) => {
             [util::UPos2d{ x: 2, y: 0 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 2 }, util::UPos2d{ x: 2, y: 3 }]
         },
-        (I, West) => {
+        (I, North) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 3, y: 1 }]
         },
 
-        (L, North) => {
+        (J, West) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 0, y: 2 }]
         },
-        (L, East) => {
+        (J, South) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 2 }]
         },
-        (L, South) => {
+        (J, East) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 0 }]
         },
-        (L, West) => {
+        (J, North) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 0, y: 0 }]
         },
 
-        (J, North) => {
+        (L, West) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 0, y: 0 }]
         },
-        (J, East) => {
+        (L, South) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 0, y: 2 }]
         },
-        (J, South) => {
+        (L, East) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 2 }]
         },
-        (J, West) => {
+        (L, North) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 0 }]
         },
 
-        (S, North) => {
+        (Z, West) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 0, y: 2 }]
         },
-        (S, East) => {
+        (Z, South) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 2 }]
         },
-        (S, South) => {
+        (Z, East) => {
             [util::UPos2d{ x: 2, y: 0 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
-        (S, West) => {
+        (Z, North) => {
             [util::UPos2d{ x: 0, y: 0 }, util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }]
         },
 
-        (Z, North) => {
+        (S, West) => {
             [util::UPos2d{ x: 0, y: 0 }, util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
-        (Z, East) => {
+        (S, South) => {
             [util::UPos2d{ x: 0, y: 2 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }]
         },
-        (Z, South) => {
+        (S, East) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 2, y: 2 }]
         },
-        (Z, West) => {
+        (S, North) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 2, y: 0 }]
         },
 
-        (T, North) => {
+        (T, West) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 0, y: 1 }]
         },
-        (T, East) => {
+        (T, South) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 1, y: 2 }]
         },
-        (T, South) => {
+        (T, East) => {
             [util::UPos2d{ x: 1, y: 0 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 1, y: 2 }, util::UPos2d{ x: 2, y: 1 }]
         },
-        (T, West) => {
+        (T, North) => {
             [util::UPos2d{ x: 0, y: 1 }, util::UPos2d{ x: 1, y: 1 }, util::UPos2d{ x: 2, y: 1 }, util::UPos2d{ x: 1, y: 0 }]
         },
+    }
+}
+
+fn get_shape_color(shape: Shape) -> Color {
+    match shape {
+        Shape::I => Color::Teal,
+        Shape::J => Color::Blue,
+        Shape::L => Color::Orange,
+        Shape::O => Color::Yellow,
+        Shape::S => Color::Green,
+        Shape::T => Color::Purple,
+        Shape::Z => Color::Red,
+    }
+}
+
+fn get_shape_offset_tests(shape: Shape, orientation: util::Orientation) -> [Pos2d; 5] {
+    match shape {
+        Shape::J | Shape::L | Shape::S | Shape::T | Shape::Z => {
+            match orientation {
+                util::Orientation::North | util::Orientation::South => {[
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 0, y: 0 },
+                ]},
+                util::Orientation::East => {[
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 1, y: 0 },
+                    Pos2d{ x: 1, y: 1 },
+                    Pos2d{ x: 0, y: -2 },
+                    Pos2d{ x: 1, y: -2 },
+                ]},
+                util::Orientation::West => {[
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: -1, y: 0 },
+                    Pos2d{ x: -1, y: 1 },
+                    Pos2d{ x: 0, y: -2 },
+                    Pos2d{ x: -1, y: -2 },
+                ]},
+            }
+        },
+        Shape::I => {
+            match orientation {
+                util::Orientation::North => {[
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: -1, y: 0 },
+                    Pos2d{ x: 2, y: 0 },
+                    Pos2d{ x: -1, y: 0 },
+                    Pos2d{ x: 2, y: 0 },
+                ]},
+                util::Orientation::East => {[
+                    Pos2d{ x: -1, y: 0 },
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 0, y: 0 },
+                    Pos2d{ x: 0, y: -1 },
+                    Pos2d{ x: 0, y: 2 },
+                ]},
+                util::Orientation::South => {[
+                    Pos2d{ x: -1, y: -1 },
+                    Pos2d{ x: 1, y: -1 },
+                    Pos2d{ x: -2, y: -1 },
+                    Pos2d{ x: 1, y: 0 },
+                    Pos2d{ x: -2, y: 0 },
+                ]},
+                util::Orientation::West => {[
+                    Pos2d{ x: 0, y: -1 },
+                    Pos2d{ x: 0, y: -1 },
+                    Pos2d{ x: 0, y: 1 },
+                    Pos2d{ x: 0, y: 1 },
+                    Pos2d{ x: 0, y: -2 },
+                ]},
+            }
+        },
+        Shape::O => {
+            match orientation {
+                util::Orientation::North => {[Pos2d{ x: 0, y: 0 }; 5]},
+                util::Orientation::East => {[Pos2d{ x: 0, y: 1 }; 5]},
+                util::Orientation::South => {[Pos2d{ x: -1, y: 1 }; 5]},
+                util::Orientation::West => {[Pos2d{ x: -1, y: 0 }; 5]},
+            }
+        }
     }
 }

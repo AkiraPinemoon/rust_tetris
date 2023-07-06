@@ -1,17 +1,16 @@
-use std::{fmt::Display};
+use std::fmt::Display;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 
-use crate::{tetromino::{self, Shape}, util::{self, Pos2d}};
+use crate::{tetromino::{self, Shape, Color, Tetromino}, util::{self, Pos2d}};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Running,
-    Lost,
 }
 
 pub struct GameState {
-    pub grid: [[bool; 10]; 20],
+    pub grid: [[Option<tetromino::Color>; 10]; 20],
     pub current: Option<(tetromino::Tetromino, util::Pos2d)>,
     pub state: State,
     pub next: Vec<tetromino::Shape>,
@@ -20,7 +19,7 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> Self {
         Self {
-            grid: [[false; 10]; 20],
+            grid: [[None; 10]; 20],
             current: None,
             state: State::Running,
             next: Vec::new(),
@@ -44,7 +43,7 @@ impl GameState {
                 // put current in grid
                 if let Some((tetro, pos)) = self.current {
                     for tile in tetro.get_tiles() {
-                        self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] = true;
+                        self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] = Some(tetro.color);
                     }
                 }
 
@@ -62,14 +61,10 @@ impl GameState {
     fn fall(&mut self) -> Result<(), ()> {
         match self.current {
             None => Ok(()),
-            Some((tetro, mut pos)) => {
-                let mut res = true;
-                for tile in tetro.get_tiles() {
-                    if tile.y as isize + pos.y == 19 { return Err(()) }
-                    if self.grid[(tile.y as isize + pos.y + 1) as usize][(tile.x as isize + pos.x) as usize] { res = false }
-                }
+            Some((tetro, pos)) => {
+                let test = self.fit_test(tetro, util::Pos2d{ x: pos.x, y: pos.y + 1});
 
-                if res {
+                if test {
                     self.current = Some((tetro, Pos2d{ x: pos.x, y: pos.y + 1 }));
                     Ok(())
                 } else {
@@ -83,11 +78,7 @@ impl GameState {
         match self.current {
             None => (),
             Some((tetro, pos)) => {
-                for tile in tetro.get_tiles() {
-                    if tile.x as isize + pos.x == 9 { return }
-                    if self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x + 1) as usize] { return }
-                }
-
+                if !self.fit_test(tetro, Pos2d{ x: pos.x + 1, y: pos.y}) { return }
                 self.current = Some((tetro, Pos2d{ x: pos.x + 1, y: pos.y }));
             }
         }
@@ -97,13 +88,8 @@ impl GameState {
         match self.current {
             None => (),
             Some((tetro, pos)) => {
-                let mut res = true;
-                for tile in tetro.get_tiles() {
-                    if tile.x as isize + pos.x == 0 { return }
-                    if self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x - 1) as usize] { res = false }
-                }
-
-                if res { self.current = Some((tetro, Pos2d{ x: pos.x - 1, y: pos.y })) }
+                if !self.fit_test(tetro, Pos2d{ x: pos.x - 1, y: pos.y}) { return }
+                self.current = Some((tetro, Pos2d{ x: pos.x - 1, y: pos.y }));
             }
         }
     }
@@ -122,15 +108,26 @@ impl GameState {
 
     fn remove_lines(&mut self) {
         for (y, &line) in self.grid.clone().iter().enumerate() {
-            let full = line.into_iter().filter(|&cell| { !cell }).collect::<Vec<bool>>().len() == 0;
+            let full = line.into_iter().filter(|&cell| { cell.is_none() }).collect::<Vec<Option<Color>>>().len() == 0;
 
             if full {
                 for ymov in (1..y).rev() {
                     self.grid[ymov + 1] = self.grid[ymov];
                 }
-                self.grid[0] = [false; 10];
+                self.grid[0] = [None; 10];
             }
         }
+    }
+
+    fn fit_test(&self, tetro: Tetromino, pos: util::Pos2d) -> bool {
+        for tile in tetro.get_tiles() {
+            if (tile.x as isize + pos.x) > 9 { return false }
+            if (tile.x as isize + pos.x) < 0 { return false }
+            if (tile.y as isize + pos.y) > 19 { return false }
+            if (tile.y as isize + pos.y) < 0 { return false }
+            if self.grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize].is_some() { return false }
+        }
+        true
     }
 }
 
@@ -140,13 +137,25 @@ impl Display for GameState {
 
         if let Some((tetro, pos)) = self.current {
             for tile in tetro.get_tiles() {
-                dsp_grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] = true;
+                dsp_grid[(tile.y as isize + pos.y) as usize][(tile.x as isize + pos.x) as usize] = Some(tetro.color);
             }
         }
 
         let out = dsp_grid.into_iter().map(|line| {
             line.into_iter().map(|cell| {
-                if cell { "[]".to_string() } else { ". ".to_string() }
+                match cell {
+                    None => ". ".to_string(),
+                    Some(col) => match col {
+                        Color::Teal => "[]".to_string(),
+                        Color::Blue => "██".to_string(),
+                        Color::Orange => "▒▒".to_string(),
+                        Color::Yellow => "()".to_string(),
+                        Color::Green => "{}".to_string(),
+                        Color::Purple => "▓▓".to_string(),
+                        Color::Red => "░░".to_string(),
+                    },
+
+                }
             }).collect::<String>()
         }).collect::<Vec<String>>().join("\n");
 
