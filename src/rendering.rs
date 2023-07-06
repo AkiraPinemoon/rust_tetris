@@ -22,7 +22,7 @@ impl Renderer for ConsoleRenderer {
         let out = dsp_grid.into_iter().map(|line| {
             line.into_iter().map(|cell| {
                 match cell {
-                    None => ". ".to_string(),
+                    None => "  ".to_string(),
                     Some(col) => match col {
                         Color::Teal => "[]".to_string(),
                         Color::Blue => "██".to_string(),
