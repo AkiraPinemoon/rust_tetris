@@ -17,11 +17,11 @@ fn main() {
 
     let mut frame: usize = 0;
 
-    let renderer: Box<dyn rendering::Renderer> = Box::new(rendering::ConsoleRenderer{});
+    let mut renderer: Box<dyn rendering::Renderer> = Box::new(rendering::SdlRenderer::new());
     while g.state == gamestate::State::Running {
         if frame % 5 == 0 { g.step(); }
 
-        renderer.draw(&g);
+        renderer.draw(&mut g);
 
         let keys = i.get_keys();
         if keys.contains(&device_query::Keycode::D) { g.move_right() }
