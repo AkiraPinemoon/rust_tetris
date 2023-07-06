@@ -58,7 +58,7 @@ impl GameState {
         if self.current.is_none() { self.spawn() }
     }
 
-    fn fall(&mut self) -> Result<(), ()> {
+    pub fn fall(&mut self) -> Result<(), ()> {
         match self.current {
             None => Ok(()),
             Some((tetro, pos)) => {

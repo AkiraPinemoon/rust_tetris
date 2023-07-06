@@ -25,6 +25,7 @@ fn main() {
         let keys = i.get_keys();
         if keys.contains(&device_query::Keycode::D) { g.move_right() }
         if keys.contains(&device_query::Keycode::A) { g.move_left() }
+        if keys.contains(&device_query::Keycode::S) { let _ = g.fall(); }
         if keys.contains(&device_query::Keycode::Space) {
             if !rothold { g.rotate(util::RotDirection::Clockwise) }
             rothold = true;
