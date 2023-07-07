@@ -137,10 +137,10 @@ impl Renderer for SdlRenderer {
                 sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::S), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::S)) },
                 sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::D), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::D)) },
                 sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Space), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::Space)) },
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::LShift), repeat: false, .. } => { events.push(crate::util::Event::KeyDown(crate::util::Keycode::Shift)) },
                 sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::A), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::A)) },
                 sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::S), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::S)) },
                 sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::D), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::D)) },
-                sdl2::event::Event::KeyUp { keycode: Some(sdl2::keyboard::Keycode::Space), repeat: false, .. } => { events.push(crate::util::Event::KeyUp(crate::util::Keycode::Space)) },
                 _ => {}
             }
         };
