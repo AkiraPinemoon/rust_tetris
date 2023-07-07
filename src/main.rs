@@ -18,7 +18,7 @@ fn main() {
     let mut down = false;
 
     while g.state == gamestate::State::Running {
-        if frame % 20 == 0 { g.step(); }
+        if frame % (100 / millispf as usize) == 0 { g.step(); }
 
         renderer.draw(&mut g);
 
