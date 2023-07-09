@@ -33,18 +33,30 @@ impl SdlRenderer {
         Self { event_pump, canvas }
     }
 
-    fn draw_field(&mut self, gamestate: &mut crate::gamestate::GameState) {
+    fn draw_grid(&mut self) {
         let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
 
-        let color = sdl2::pixels::Color::RGB(10, 10, 10);
+        let color = sdl2::pixels::Color::RGB(25, 25, 25);
         self.canvas.set_draw_color(color);
-        self.canvas
-            .fill_rect(sdl2::rect::Rect::new(0, 0, (10.0 * tilesize) as u32, (20.0 * tilesize) as u32))
-            .unwrap();
+
+        for y in 0..20 {
+            self.canvas.fill_rect(sdl2::rect::Rect::new(
+                -1, (y as f32 * tilesize) as i32 -1, (10 as f32 * tilesize) as u32, 2
+            )).unwrap();
+        }
+
+        for x in 0..10 {
+            self.canvas.fill_rect(sdl2::rect::Rect::new(
+                (x as f32 * tilesize) as i32 -1, -1, 2, (20 as f32 * tilesize) as u32
+            )).unwrap();
+        }
+    }
+
+    fn draw_tiles(&mut self, gamestate: &mut crate::gamestate::GameState) {
+        let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
 
         for (i, row) in gamestate.grid.into_iter().rev().take(20).rev().enumerate() {
             for (j, col) in row.into_iter().enumerate() {
-                if col.is_none() { continue; }
 
                 let (r, g, b) = match col {
                     Some(Color::Red) => (255, 0, 0),
@@ -54,7 +66,7 @@ impl SdlRenderer {
                     Some(Color::Purple) => (56, 2, 59),
                     Some(Color::Teal) => (34, 124, 157),
                     Some(Color::Yellow) => (255, 255, 0),
-                    None => (0, 0, 0),
+                    None => { continue; },
                 };
 
                 let (x, y) = (
@@ -117,8 +129,9 @@ impl Renderer for SdlRenderer {
 
         self.canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
         self.canvas.clear();
-        self.draw_field(gamestate);
+        self.draw_tiles(gamestate);
         self.draw_tetro(gamestate);
+        self.draw_grid();
 
         self.canvas.present();
     }
