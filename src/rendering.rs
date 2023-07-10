@@ -33,27 +33,39 @@ impl SdlRenderer {
         Self { event_pump, canvas }
     }
 
+    fn get_draw_transforms(&self) -> (crate::util::Pos2d, f32) {
+        let max_x_tilesize = self.canvas.output_size().unwrap().0 as f32 / 10.0;
+        let max_y_tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
+
+        let tilesize = if max_x_tilesize < max_y_tilesize { max_x_tilesize } else { max_y_tilesize };
+
+        let x = ((self.canvas.output_size().unwrap().0 as f32 - 10.0 * tilesize) / 2.0) as isize;
+        let y = ((self.canvas.output_size().unwrap().1 as f32 - 20.0 * tilesize) / 2.0) as isize;
+
+        (crate::util::Pos2d{ x, y }, tilesize)
+    }
+
     fn draw_grid(&mut self) {
-        let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
+        let (pos, tilesize) = self.get_draw_transforms();
 
         let color = sdl2::pixels::Color::RGB(25, 25, 25);
         self.canvas.set_draw_color(color);
 
-        for y in 0..20 {
+        for y in 0..21 {
             self.canvas.fill_rect(sdl2::rect::Rect::new(
-                -1, (y as f32 * tilesize) as i32 -1, (10 as f32 * tilesize) as u32, 2
+                pos.x as i32 - 1, pos.y as i32 + (y as f32 * tilesize) as i32 -1, (10 as f32 * tilesize) as u32, 2
             )).unwrap();
         }
 
-        for x in 0..10 {
+        for x in 0..11 {
             self.canvas.fill_rect(sdl2::rect::Rect::new(
-                (x as f32 * tilesize) as i32 -1, -1, 2, (20 as f32 * tilesize) as u32
+                pos.x as i32 + (x as f32 * tilesize) as i32 -1, pos.y as i32 - 1, 2, (20 as f32 * tilesize) as u32
             )).unwrap();
         }
     }
 
     fn draw_tiles(&mut self, gamestate: &mut crate::gamestate::GameState) {
-        let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
+        let (pos, tilesize) = self.get_draw_transforms();
 
         for (i, row) in gamestate.grid.into_iter().rev().take(20).rev().enumerate() {
             for (j, col) in row.into_iter().enumerate() {
@@ -82,7 +94,7 @@ impl SdlRenderer {
                 let color = sdl2::pixels::Color::RGB(r, g, b);
                 self.canvas.set_draw_color(color);
                 self.canvas
-                    .fill_rect(sdl2::rect::Rect::new(x, y, w, h))
+                    .fill_rect(sdl2::rect::Rect::new(pos.x as i32 + x, pos.y as i32 + y, w, h))
                     .unwrap();
             }
         }
@@ -92,7 +104,7 @@ impl SdlRenderer {
         if gamestate.current.is_none() { return; }
         let (tetro, pos) = gamestate.current.unwrap();
 
-        let tilesize = self.canvas.output_size().unwrap().1 as f32 / 20.0;
+        let (draw_pos, tilesize) = self.get_draw_transforms();
 
         for tile in tetro.get_tiles().into_iter() {
             let (r, g, b) = match tetro.color {
@@ -118,7 +130,7 @@ impl SdlRenderer {
             let color = sdl2::pixels::Color::RGB(r, g, b);
             self.canvas.set_draw_color(color);
             self.canvas
-                .fill_rect(sdl2::rect::Rect::new(x, y, w, h))
+                .fill_rect(sdl2::rect::Rect::new(draw_pos.x as i32 + x, draw_pos.y as i32 + y, w, h))
                 .unwrap();
         }
     }
