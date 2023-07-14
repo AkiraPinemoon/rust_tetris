@@ -1,3 +1,5 @@
+use sdl2::ttf::Font;
+
 use crate::tetromino::Color;
 
 pub trait Renderer {
@@ -5,12 +7,19 @@ pub trait Renderer {
     fn get_events(&mut self) -> Vec<crate::util::Event>;
 }
 
-pub struct SdlRenderer {
-    event_pump: sdl2::EventPump,
-    canvas: sdl2::render::WindowCanvas,
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref TTF_CONTEXT: sdl2::ttf::Sdl2TtfContext = sdl2::ttf::init().unwrap();
 }
 
-impl SdlRenderer {
+pub struct SdlRenderer<'a> {
+    event_pump: sdl2::EventPump,
+    canvas: sdl2::render::WindowCanvas,
+    font: sdl2::ttf::Font<'a, 'a>,
+}
+
+impl<'a> SdlRenderer<'a> {
     pub fn new() -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
@@ -30,7 +39,11 @@ impl SdlRenderer {
         canvas.present();
         let event_pump = sdl_context.event_pump().unwrap();
 
-        Self { event_pump, canvas }
+        let ttf_context = &TTF_CONTEXT;
+
+        let font: Font<'a, 'a> = ttf_context.load_font("./res/VT323-Regular.ttf", 64).unwrap();
+
+        Self { event_pump, canvas, font }
     }
 
     fn get_draw_transforms(&self) -> (crate::util::Pos2d, f32) {
@@ -134,9 +147,26 @@ impl SdlRenderer {
                 .unwrap();
         }
     }
+
+    fn draw_score(&mut self, gamestate: &mut crate::gamestate::GameState) {
+        let text_surface = self.font.render(&gamestate.score.to_string())
+            .blended(sdl2::pixels::Color::RGBA(255, 255, 255, 255))
+            .map_err(|e| e.to_string()).unwrap();
+
+        let texture_creator = self.canvas.texture_creator();
+
+        let text_texture = texture_creator
+            .create_texture_from_surface(&text_surface)
+            .map_err(|e| e.to_string()).unwrap();
+
+        let sdl2::render::TextureQuery { width, height, .. } = text_texture.query();
+        let canvas_width = self.canvas.output_size().unwrap().0;
+
+        let _ = self.canvas.copy(&text_texture, None, Some(sdl2::rect::Rect::new((canvas_width as i32 - width as i32) / 2, 0, width, height)));
+    }
 }
 
-impl Renderer for SdlRenderer {
+impl Renderer for SdlRenderer<'_> {
     fn draw(&mut self, gamestate: &mut crate::gamestate::GameState) {
 
         self.canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
@@ -144,6 +174,7 @@ impl Renderer for SdlRenderer {
         self.draw_tiles(gamestate);
         self.draw_tetro(gamestate);
         self.draw_grid();
+        self.draw_score(gamestate);
 
         self.canvas.present();
     }

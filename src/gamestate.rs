@@ -15,6 +15,7 @@ pub struct GameState {
     pub current: Option<(tetromino::Tetromino, util::Pos2d)>,
     pub state: State,
     pub next: Vec<tetromino::Shape>,
+    pub score: usize,
 }
 
 impl GameState {
@@ -24,6 +25,7 @@ impl GameState {
             current: None,
             state: State::Running,
             next: Vec::new(),
+            score: 0,
         }
     }
 
@@ -114,6 +116,8 @@ impl GameState {
     }
 
     fn remove_lines(&mut self) {
+        let mut count = 0;
+
         for (y, &line) in self.grid.clone().iter().enumerate() {
             let blocks_in_line = line.into_iter().filter(|&cell| { cell.is_some() }).collect::<Vec<Option<Color>>>().len();
             let full = blocks_in_line == 10;
@@ -130,8 +134,18 @@ impl GameState {
                     self.grid[ymov + 1] = self.grid[ymov];
                 }
                 self.grid[0] = [None; 10];
+
+                count += 1;
             }
         }
+
+        self.score += match count {
+            1 => 100,
+            2 => 300,
+            3 => 500,
+            4 => 800,
+            _ => 0,
+        };
     }
 
     fn fit_test(&self, tetro: Tetromino, pos: util::Pos2d) -> bool {
