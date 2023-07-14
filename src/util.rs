@@ -57,5 +57,5 @@ pub enum Event {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Keycode {
-    A, S, D, Space, Shift
+    W, A, S, D, Space, Shift
 }

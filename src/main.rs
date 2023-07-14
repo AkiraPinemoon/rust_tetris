@@ -32,6 +32,11 @@ fn main() {
         if events.contains(&util::Event::KeyUp(util::Keycode::D)) { right = false }
         if events.contains(&util::Event::KeyUp(util::Keycode::A)) { left = false }
         if events.contains(&util::Event::KeyUp(util::Keycode::S)) { down = false }
+        if events.contains(&util::Event::KeyDown(util::Keycode::W)) {
+            loop {
+                if let Err(_) = g.fall() { break; }
+            }
+        }
 
         if frame % (100 / millispf as usize) == 0 {
             if right { g.move_right() }
